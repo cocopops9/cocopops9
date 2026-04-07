@@ -6,7 +6,7 @@
 
 ## hey
 
-I'm Giuseppe — Computer Engineering student at the **University of Padova**, specializing in **AI & Robotics**. Did an Erasmus at **UPC Barcelona**.
+I'm Giuseppe, a Computer Engineering student at the **University of Padova**, specializing in **AI & Robotics**. Did an Erasmus at **UPC Barcelona**.
 
 I like building things that perceive, reason, and act. Most of my work sits somewhere between deep learning, computer vision, and reinforcement learning. I've written a few papers and built some projects, check out the repos if you're curious.
 
