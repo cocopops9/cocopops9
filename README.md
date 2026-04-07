@@ -47,36 +47,31 @@ Currently looking for an **abroad thesis opportunity**, preferably industry-side
 
 ## connect 4
 
-**Want to play?** Open an issue titled `connect4|drop|{column}` (1-7) and a bot will process your move. See [`CONNECT4_SETUP.md`](./CONNECT4_SETUP.md) for how it works.
+<div align="center">
 
-[![Play](https://img.shields.io/badge/Drop%20a%20disc-1f6feb?style=for-the-badge&logo=github&logoColor=white)](https://github.com/cocopops9/cocopops9/issues/new?title=connect4%7Cdrop%7C4&body=Replace+the+4+in+the+title+with+your+column+(1-7)+and+submit!)
+**Think you can beat my bot?** Click below to play directly in your browser.
 
-<details>
-<summary>Current board</summary>
-<br>
+[![Play Connect 4](https://img.shields.io/badge/Play%20Connect%204-1f6feb?style=for-the-badge&logo=github&logoColor=white)](https://cocopops9.github.io/cocopops9/connect4.html)
 
-```
- 1   2   3   4   5   6   7
- .   .   .   .   .   .   .
- .   .   .   .   .   .   .
- .   .   .   .   .   .   .
- .   .   .   .   .   .   .
- .   .   .   .   .   .   .
- .   .   .   .   .   .   .
-```
+<sub>Minimax AI with alpha-beta pruning. Good luck.</sub>
 
-*No game in progress.*
+</div>
 
-</details>
+---
+
+## contacts
+
+<div align="center">
+
+<a href="https://instagram.com/_giuseppedauria_"><img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram"/></a>
+&nbsp;&nbsp;
+<a href="https://linkedin.com/in/dauriagiuseppe"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+
+</div>
 
 ---
 
 <div align="center">
-
-[![Instagram](https://img.shields.io/badge/@__giuseppedauria__-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/_giuseppedauria_)
-[![LinkedIn](https://img.shields.io/badge/Giuseppe%20D'Auria-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/dauriagiuseppe)
-
-<br>
 
 <img src="https://komarev.com/ghpvc/?username=cocopops9&color=1f6feb&style=flat-square&label=views" alt="views"/>
 
