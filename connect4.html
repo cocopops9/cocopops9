@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect 4 - Giuseppe D'Auria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --border: #1e2330;
+    --text: #c9d1d9;
+    --text-dim: #484f58;
+    --blue: #1f6feb;
+    --blue-glow: rgba(31,111,235,0.25);
+    --red: #da3633;
+    --red-glow: rgba(218,54,51,0.25);
+    --yellow: #d29922;
+    --yellow-glow: rgba(210,153,34,0.25);
+    --cell: #161b22;
+    --cell-hover: #1c2129;
+    --board-bg: #0d1117;
+    --radius: 12px;
+  }
+
+  html { background: var(--bg); }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* subtle grid texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(31,111,235,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(31,111,235,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 520px;
+    width: 100%;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .header h1 {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .header h1 span { color: var(--blue); }
+
+  .header p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  /* Status bar */
+  .status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .status.win {
+    border-color: var(--blue);
+    box-shadow: 0 0 20px var(--blue-glow);
+  }
+
+  .status.lose {
+    border-color: var(--red);
+    box-shadow: 0 0 20px var(--red-glow);
+  }
+
+  .status.draw {
+    border-color: var(--yellow);
+    box-shadow: 0 0 20px var(--yellow-glow);
+  }
+
+  /* Board */
+  .board-wrapper {
+    background: var(--board-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+
+  .cell {
+    width: 56px;
+    height: 56px;
+    background: var(--cell);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden;
+  }
+
+  .cell.hoverable:hover {
+    background: var(--cell-hover);
+    box-shadow: inset 0 0 12px rgba(31,111,235,0.1);
+  }
+
+  .cell.red {
+    background: var(--red);
+    box-shadow: 0 0 14px var(--red-glow), inset 0 -3px 6px rgba(0,0,0,0.3);
+    cursor: default;
+  }
+
+  .cell.blue {
+    background: var(--blue);
+    box-shadow: 0 0 14px var(--blue-glow), inset 0 -3px 6px rgba(0,0,0,0.3);
+    cursor: default;
+  }
+
+  .cell.win-cell {
+    animation: pulse 0.8s ease-in-out infinite alternate;
+  }
+
+  .cell.drop-anim {
+    animation: dropIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes dropIn {
+    from { transform: scale(0.3); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  @keyframes pulse {
+    from { filter: brightness(1); }
+    to   { filter: brightness(1.4); }
+  }
+
+  /* Column indicators */
+  .col-indicators {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .col-ind {
+    width: 56px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+
+  .col-ind::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  .col-ind.active:hover::after {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red-glow);
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 0.8rem;
+  }
+
+  button.btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.55rem 1.2rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  button.btn:hover {
+    border-color: var(--blue);
+    box-shadow: 0 0 12px var(--blue-glow);
+  }
+
+  .score-bar {
+    display: flex;
+    gap: 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .score-bar span.val { color: var(--text); font-weight: 500; }
+
+  /* Back link */
+  .back {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-weight: 300;
+    transition: color 0.2s;
+  }
+  .back:hover { color: var(--blue); }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .cell { width: 42px; height: 42px; }
+    .col-ind { width: 42px; height: 16px; }
+    .board-wrapper { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1><span>></span> connect_four</h1>
+    <p>you (red) vs machine (blue)</p>
+  </div>
+
+  <div class="score-bar">
+    <div>wins <span class="val" id="wins">0</span></div>
+    <div>draws <span class="val" id="draws">0</span></div>
+    <div>losses <span class="val" id="losses">0</span></div>
+  </div>
+
+  <div id="status" class="status">your turn -- click a column</div>
+
+  <div class="board-wrapper">
+    <div class="col-indicators" id="indicators"></div>
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="resetGame()">new game</button>
+    <button class="btn" onclick="resetScore()">reset score</button>
+  </div>
+
+  <a class="back" href="https://github.com/nemesi21">back to profile</a>
+</div>
+
+<script>
+const ROWS = 6;
+const COLS = 7;
+const EMPTY = 0;
+const PLAYER = 1;  // red
+const BOT = 2;     // blue
+
+let board = [];
+let gameOver = false;
+let playerTurn = true;
+let score = { wins: 0, draws: 0, losses: 0 };
+
+const boardEl = document.getElementById('board');
+const indEl = document.getElementById('indicators');
+const statusEl = document.getElementById('status');
+
+// Initialize the board grid
+function initDOM() {
+  boardEl.innerHTML = '';
+  indEl.innerHTML = '';
+
+  for (let c = 0; c < COLS; c++) {
+    const ind = document.createElement('div');
+    ind.className = 'col-ind active';
+    ind.addEventListener('click', () => handleClick(c));
+    indEl.appendChild(ind);
+  }
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell hoverable';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('click', () => handleClick(c));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function resetBoard() {
+  board = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
+  gameOver = false;
+  playerTurn = true;
+  statusEl.className = 'status';
+  statusEl.textContent = 'your turn -- click a column';
+
+  document.querySelectorAll('.cell').forEach(cell => {
+    cell.className = 'cell hoverable';
+  });
+
+  document.querySelectorAll('.col-ind').forEach(ind => {
+    ind.classList.add('active');
+  });
+}
+
+function resetGame() {
+  resetBoard();
+}
+
+function resetScore() {
+  score = { wins: 0, draws: 0, losses: 0 };
+  updateScoreDisplay();
+  resetBoard();
+}
+
+function updateScoreDisplay() {
+  document.getElementById('wins').textContent = score.wins;
+  document.getElementById('draws').textContent = score.draws;
+  document.getElementById('losses').textContent = score.losses;
+}
+
+function getCell(r, c) {
+  return boardEl.children[r * COLS + c];
+}
+
+function dropDisc(col, disc) {
+  for (let r = ROWS - 1; r >= 0; r--) {
+    if (board[r][col] === EMPTY) {
+      board[r][col] = disc;
+      const cell = getCell(r, col);
+      cell.classList.remove('hoverable');
+      cell.classList.add(disc === PLAYER ? 'red' : 'blue', 'drop-anim');
+      return r;
+    }
+  }
+  return -1;
+}
+
+function checkWin(disc) {
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (board[r][c] !== disc) continue;
+      for (const [dr, dc] of dirs) {
+        let cells = [];
+        let valid = true;
+        for (let i = 0; i < 4; i++) {
+          const nr = r + dr * i;
+          const nc = c + dc * i;
+          if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || board[nr][nc] !== disc) {
+            valid = false;
+            break;
+          }
+          cells.push([nr, nc]);
+        }
+        if (valid) return cells;
+      }
+    }
+  }
+  return null;
+}
+
+function isBoardFull() {
+  return board[0].every(cell => cell !== EMPTY);
+}
+
+function disableBoard() {
+  gameOver = true;
+  document.querySelectorAll('.cell').forEach(c => c.classList.remove('hoverable'));
+  document.querySelectorAll('.col-ind').forEach(i => i.classList.remove('active'));
+}
+
+function highlightWin(cells) {
+  for (const [r, c] of cells) {
+    getCell(r, c).classList.add('win-cell');
+  }
+}
+
+function handleClick(col) {
+  if (gameOver || !playerTurn) return;
+  if (board[0][col] !== EMPTY) return;
+
+  playerTurn = false;
+  dropDisc(col, PLAYER);
+
+  const winCells = checkWin(PLAYER);
+  if (winCells) {
+    highlightWin(winCells);
+    statusEl.textContent = 'you win';
+    statusEl.className = 'status win';
+    score.wins++;
+    updateScoreDisplay();
+    disableBoard();
+    return;
+  }
+
+  if (isBoardFull()) {
+    statusEl.textContent = 'draw';
+    statusEl.className = 'status draw';
+    score.draws++;
+    updateScoreDisplay();
+    disableBoard();
+    return;
+  }
+
+  statusEl.textContent = 'thinking...';
+
+  // Small delay so the player sees their disc land
+  setTimeout(() => {
+    botPlay();
+  }, 400);
+}
+
+// --- Bot AI (minimax with alpha-beta, depth 5) ---
+
+function evaluate(b) {
+  // Score segments of 4
+  let total = 0;
+  const score4 = (cells) => {
+    let p = 0, o = 0, e = 0;
+    for (const v of cells) {
+      if (v === BOT) p++;
+      else if (v === PLAYER) o++;
+      else e++;
+    }
+    if (p === 4) return 10000;
+    if (o === 4) return -10000;
+    if (p === 3 && e === 1) return 50;
+    if (o === 3 && e === 1) return -50;
+    if (p === 2 && e === 2) return 5;
+    if (o === 2 && e === 2) return -5;
+    return 0;
+  };
+
+  // Horizontal
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c <= COLS - 4; c++)
+      total += score4([b[r][c], b[r][c+1], b[r][c+2], b[r][c+3]]);
+
+  // Vertical
+  for (let r = 0; r <= ROWS - 4; r++)
+    for (let c = 0; c < COLS; c++)
+      total += score4([b[r][c], b[r+1][c], b[r+2][c], b[r+3][c]]);
+
+  // Diag down-right
+  for (let r = 0; r <= ROWS - 4; r++)
+    for (let c = 0; c <= COLS - 4; c++)
+      total += score4([b[r][c], b[r+1][c+1], b[r+2][c+2], b[r+3][c+3]]);
+
+  // Diag down-left
+  for (let r = 0; r <= ROWS - 4; r++)
+    for (let c = 3; c < COLS; c++)
+      total += score4([b[r][c], b[r+1][c-1], b[r+2][c-2], b[r+3][c-3]]);
+
+  // Center column preference
+  for (let r = 0; r < ROWS; r++) {
+    if (b[r][3] === BOT) total += 3;
+  }
+
+  return total;
+}
+
+function getValidCols(b) {
+  const cols = [];
+  // Check center first, then outward
+  for (const c of [3, 2, 4, 1, 5, 0, 6]) {
+    if (b[0][c] === EMPTY) cols.push(c);
+  }
+  return cols;
+}
+
+function simDrop(b, col, disc) {
+  const nb = b.map(row => row.slice());
+  for (let r = ROWS - 1; r >= 0; r--) {
+    if (nb[r][col] === EMPTY) {
+      nb[r][col] = disc;
+      return nb;
+    }
+  }
+  return null;
+}
+
+function hasWin(b, disc) {
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (b[r][c] !== disc) continue;
+      for (const [dr, dc] of dirs) {
+        let ok = true;
+        for (let i = 1; i < 4; i++) {
+          const nr = r + dr * i, nc = c + dc * i;
+          if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || b[nr][nc] !== disc) { ok = false; break; }
+        }
+        if (ok) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function minimax(b, depth, alpha, beta, maximizing) {
+  if (hasWin(b, BOT)) return 100000 + depth;
+  if (hasWin(b, PLAYER)) return -100000 - depth;
+
+  const cols = getValidCols(b);
+  if (cols.length === 0 || depth === 0) return evaluate(b);
+
+  if (maximizing) {
+    let val = -Infinity;
+    for (const c of cols) {
+      const nb = simDrop(b, c, BOT);
+      if (!nb) continue;
+      val = Math.max(val, minimax(nb, depth - 1, alpha, beta, false));
+      alpha = Math.max(alpha, val);
+      if (beta <= alpha) break;
+    }
+    return val;
+  } else {
+    let val = Infinity;
+    for (const c of cols) {
+      const nb = simDrop(b, c, PLAYER);
+      if (!nb) continue;
+      val = Math.min(val, minimax(nb, depth - 1, alpha, beta, true));
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return val;
+  }
+}
+
+function botPlay() {
+  const cols = getValidCols(board);
+  let bestCol = cols[0];
+  let bestVal = -Infinity;
+
+  for (const c of cols) {
+    const nb = simDrop(board, c, BOT);
+    if (!nb) continue;
+    const val = minimax(nb, 5, -Infinity, Infinity, false);
+    if (val > bestVal) {
+      bestVal = val;
+      bestCol = c;
+    }
+  }
+
+  dropDisc(bestCol, BOT);
+
+  const winCells = checkWin(BOT);
+  if (winCells) {
+    highlightWin(winCells);
+    statusEl.textContent = 'machine wins';
+    statusEl.className = 'status lose';
+    score.losses++;
+    updateScoreDisplay();
+    disableBoard();
+    return;
+  }
+
+  if (isBoardFull()) {
+    statusEl.textContent = 'draw';
+    statusEl.className = 'status draw';
+    score.draws++;
+    updateScoreDisplay();
+    disableBoard();
+    return;
+  }
+
+  playerTurn = true;
+  statusEl.textContent = 'your turn -- click a column';
+}
+
+// Boot
+initDOM();
+resetBoard();
+</script>
+
+</body>
+</html>
